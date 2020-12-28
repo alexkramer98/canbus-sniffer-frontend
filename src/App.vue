@@ -6,9 +6,8 @@
             <p class="mt-3">Seen data: <b-badge :variant="hadData ? 'success' : 'danger'">{{hadData ? 'Yes': 'No'}}</b-badge></p>
         </div>
         <div class="d-flex justify-content-between">
-            <b-input-group prepend="Filter (id):">
-                <b-form-input class="rounded-0" placeholder="Optional" v-model="filterText"></b-form-input>
-            </b-input-group>
+            <span class="m-2">DEC</span>
+            <b-checkbox class="mr-2 mt-2" switch v-model="hexMode">HEX</b-checkbox>
             <b-input-group prepend="Port:">
                 <b-select :options="ports" v-model="selectedPort"/>
             </b-input-group>
@@ -24,12 +23,14 @@
             <tr>
                 <th>ID</th>
                 <th v-for="i in 8" :key="i">{{i}}</th>
+                <th>ASCII</th>
             </tr>
             </thead>
             <tbody>
             <tr v-for="message of messages" :key="message.id">
-                <td>0x{{ message.id }}</td>
-                <td v-for="(byte, index) in message.msg" :key="message.id + '-' + index">0x{{ byte }}</td>
+                <td class="message-id">{{ message.id }}</td>
+                <td class="message-byte" v-for="(byte, index) in message.msg" :key="message.id + '-' + index">{{ getValue(byte) }}</td>
+                <td class="message-ascii">{{getAsciiValue(message.msg)}}</td>
             </tr>
             </tbody>
         </table>
@@ -50,10 +51,9 @@ export default {
             hadData: false,
             selectedPort: null,
             selectedBaudrate: null,
-            filterText: null,
+            hexMode: true,
             canBaudrates: [5, 10, 20, 25, 33, 50, 80, 95, 100, 125, 200, 250, 500, 666, 1000],
             arduino: null,
-            log: [],
             messages: [],
         }
     },
@@ -79,12 +79,20 @@ export default {
             });
         });
     },
-    // watch: {
-    //     messages() {
-    //         console.log(this.messages);
-    //     }
-    // },
     methods: {
+        getAsciiValue(bytes) {
+            let ascii = '';
+            bytes.forEach(byte => {
+                ascii += (Buffer.from(byte, 'hex').toString());
+            });
+            return ascii;
+        },
+        getValue(byte) {
+            if (this.hexMode) {
+                return byte;
+            }
+            return byte === '-' ? byte : parseInt(byte, 16);
+        },
         onConnect() {
             this.isConnected = false;
             this.isInitialized = false;
@@ -146,7 +154,9 @@ export default {
                 const splitMsg = data.split(':');
                 const id = splitMsg[0];
                 const msg = splitMsg[1].split(',');
-
+                for (let i = msg.length; i < 8; i++) {
+                    msg.push('-');
+                }
                 const existingIndex = this.messages.findIndex(item => item.id === id);
 
                 if (existingIndex !== -1) {
@@ -167,5 +177,8 @@ export default {
 </script>
 
 <style>
-
+.table {
+    table-layout: fixed;
+    white-space: nowrap;
+}
 </style>
