@@ -117,6 +117,8 @@ export default {
                     });
                 }
                 this.isConnected = false;
+                this.isInitialized = false;
+                this.hadData = false;
             });
             setTimeout(() => {
                 if (!this.isConnected) {
