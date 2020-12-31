@@ -26,10 +26,12 @@
                 <th>ASCII</th>
             </tr>
             </thead>
-            <tbody>
-            <tr v-for="message of messages" :key="message.id">
+            <tbody is="transition-group" name="fade">
+            <tr v-for="message of messages" :key="message.id + '-' + message.msg.join('.')">
                 <td class="message-id">{{ message.id }}</td>
-                <td class="message-byte" v-for="(byte, index) in message.msg" :key="message.id + '-' + index">{{ getValue(byte) }}</td>
+                <td class="message-byte" v-for="(byte, index) in message.msg" :key="message.id + '-' + index">
+                    {{ getValue(byte) }}
+                </td>
                 <td class="message-ascii">{{getAsciiValue(message.msg)}}</td>
             </tr>
             </tbody>
@@ -60,7 +62,7 @@ export default {
     created() {
         SerialPort.list().then(data => {
             data.forEach(item => {
-               if (item.manufacturer && item.manufacturer.includes('arduino')) {
+               if (item.serialNumber || item.manufacturer) {
                    this.ports.push(item.path);
                }
             });
@@ -181,4 +183,12 @@ export default {
     table-layout: fixed;
     white-space: nowrap;
 }
+.fade-enter-active, .fade-leave-active {
+    background-color: initial;
+    transition: all .5s;
+}
+.fade-enter, .fade-leave-to  {
+    background-color: lightgreen;
+}
 </style>
++
